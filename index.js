@@ -40,6 +40,8 @@ drawCardBtn.addEventListener("click", () => {
             
             if (data.remaining === 0) {
                 drawCardBtn.disabled = true
+                header.textContent = humanScore > computerScore ? "The Human Wins!"
+                    : humanScore === computerScore ? "It's a Draw" : "The computer Wins!"
             }
         })
 })
