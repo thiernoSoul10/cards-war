@@ -10,41 +10,56 @@ const humanScoreLabel = document.getElementById("human-score")
 let computerScore = 0
 let humanScore = 0
 
-function handleClick() {
-    fetch("https://apis.scrimba.com/deckofcards/api/deck/new/shuffle/")
-        .then(res => res.json())
-        .then(data => {
-            remainingText.textContent = `Remaining cards: ${data.remaining}`
-            deckId = data.deck_id
-            console.log(deckId)
-        })
+async function handleClick(){
+    try {
+        const response = await fetch("https://apis.scrimba.com/deckofcards/api/deck/new/shuffle/")
+        if(!response.ok)
+            throw new Error("Could not connect to the server")
+
+        const data = await response.json()
+
+        remainingText.textContent = `Remaining cards: ${data.remaining}`
+        deckId = data.deck_id
+        console.log(deckId)
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+async function handleDraw() {
+
+    try {
+        const response = await fetch(`https://apis.scrimba.com/deckofcards/api/deck/${deckId}/draw/?count=2`)
+        if(!response.ok)
+            throw new Error("Could not connect to the server!")
+        
+        data = await response.json()
+
+        remainingText.textContent = `Remaining cards: ${data.remaining}`
+        cardsContainer.children[0].innerHTML = `
+            <img src=${data.cards[0].image} class="card" />
+        `
+        cardsContainer.children[1].innerHTML = `
+            <img src=${data.cards[1].image} class="card" />
+        `
+        const winnerText = determineCardWinner(data.cards[0], data.cards[1])
+        header.textContent = winnerText
+        computerScoreLabel.textContent = computerScore
+        humanScoreLabel.textContent = humanScore
+        
+        if (data.remaining === 0) {
+            drawCardBtn.disabled = true
+            header.textContent = humanScore > computerScore ? "The Human Wins!"
+                : humanScore === computerScore ? "It's a Draw" : "The computer Wins!"
+        }
+    } catch (error) {
+        console.log(error)
+    }
 }
 
 newDeckBtn.addEventListener("click", handleClick)
 
-drawCardBtn.addEventListener("click", () => {
-    fetch(`https://apis.scrimba.com/deckofcards/api/deck/${deckId}/draw/?count=2`)
-        .then(res => res.json())
-        .then(data => {
-            remainingText.textContent = `Remaining cards: ${data.remaining}`
-            cardsContainer.children[0].innerHTML = `
-                <img src=${data.cards[0].image} class="card" />
-            `
-            cardsContainer.children[1].innerHTML = `
-                <img src=${data.cards[1].image} class="card" />
-            `
-            const winnerText = determineCardWinner(data.cards[0], data.cards[1])
-            header.textContent = winnerText
-            computerScoreLabel.textContent = computerScore
-            humanScoreLabel.textContent = humanScore
-            
-            if (data.remaining === 0) {
-                drawCardBtn.disabled = true
-                header.textContent = humanScore > computerScore ? "The Human Wins!"
-                    : humanScore === computerScore ? "It's a Draw" : "The computer Wins!"
-            }
-        })
-})
+drawCardBtn.addEventListener("click", handleDraw)
 
 /**
  * Challenge:
